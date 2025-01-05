@@ -1,7 +1,9 @@
-import { Controller, Get, Param, Post, Query, Body, Delete, Patch } from '@nestjs/common';
+import { Controller, Get, Param, Post, Body, Delete, Patch, UseGuards } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { TaskDto } from './dto';
-import { UseGuards } from '../auth/guard'
+import { JwtGuard } from '../auth/guard/index';
+import { GetUser } from 'src/auth/decorator';
+import { User } from '@prisma/client';
 
 @Controller('tasks')
 export class TasksController {
@@ -12,31 +14,35 @@ export class TasksController {
       POST /tasks/add
       DELETE /tasks/delete/:id
       PATCH /tasks/:id
-     */ 
+     */
 
     @UseGuards(JwtGuard)
     @Get('read')
-    getAllTasks(@Query('role') role?: 'ADMIN' | 'USER'){
-        return this.tasksService.getAllTasks();
+    getAllTasks(@GetUser() user: User) {
+        return this.tasksService.getAllTasks(user.id);
     }
 
+    @UseGuards(JwtGuard)
     @Get('find/:id')
-    findTask(@Param('id') id: string){
-        return this.tasksService.findTask(Number(id));
+    findTask(@GetUser() user: User, @Param('id') id: string){
+        return this.tasksService.findTask(user.id, Number(id));
     }
 
+    @UseGuards(JwtGuard)
     @Post('add')
-    addTask(@Body('task') task: TaskDto){
-        return this.tasksService.addTask(task);
-    }   
-
-    @Delete('/delete/:id')
-    deleteTask(@Param('id') id: string){
-        return this.tasksService.deleteTask(Number(id));
+    addTask(@GetUser() user: User, @Body('task') task: TaskDto) {
+        return this.tasksService.addTask(task, user.id);
     }
 
+    @UseGuards(JwtGuard)
+    @Delete('/delete/:id')
+    deleteTask(@GetUser() user: User, @Param('id') id: string){
+        return this.tasksService.deleteTask(user.id, Number(id));
+    }
+    
+    @UseGuards(JwtGuard)
     @Patch('/edit/:id')
-    updateTask(@Param('id') id: string, @Body('data') data: any){
-        this.tasksService.updateTask(Number(id), data);
+    updateTask(@GetUser() user: User, @Param('id') id: string, @Body('field') field: string, @Body('data') value: string){
+        this.tasksService.updateTask(user.id, Number(id), field, value);
     }
 }

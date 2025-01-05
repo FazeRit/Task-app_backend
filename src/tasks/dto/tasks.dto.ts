@@ -1,4 +1,4 @@
-import { IsInt, IsEnum, IsString, IsDateString, IsOptional } from 'class-validator';
+import { IsEnum, IsString, IsDateString } from 'class-validator';
 
 enum TaskStatus {
     NOT_STARTED = 'NOT_STARTED',
@@ -15,9 +15,6 @@ enum Priority {
 }
 
 export class TaskDto {
-    @IsInt()
-    userId: number;
-
     @IsEnum(TaskStatus)
     status: TaskStatus = TaskStatus.NOT_STARTED;
 
